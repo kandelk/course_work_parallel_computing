@@ -3,14 +3,14 @@ package main;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ConcurrentIndexBuilder extends Thread{
-    private ConcurrentLinkedQueue<Path> filenames;
-    private static Map<String, ArrayList<String>> index = new HashMap<>(50, 50);
+    private ArrayList<Path> files;
+    private static ConcurrentHashMap<String, List<Integer>> invertedIndex = new ConcurrentHashMap<>(50,50,2);
+    private static AtomicInteger counter = new AtomicInteger(0);
 
     public ConcurrentIndexBuilder(ConcurrentLinkedQueue<Path> filenames) {
         this.filenames = filenames;
