@@ -21,7 +21,7 @@ public class Main {
         createListOfFilesInFolder(queue);
     }
 
-    private static void createListOfFilesInFolder(Collection<Path> collection) {
+    private static void createListOfFiles(Collection<Path> collection) {
 
         try (Stream<Path> walk = Files.walk(Paths.get("resources"))) {
 
