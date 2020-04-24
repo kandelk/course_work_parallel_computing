@@ -1,5 +1,7 @@
 package main;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,11 +22,12 @@ public class ConcurrentIndexBuilder extends Thread{
 
     }
 
-    public String processString(String str) {
+    private String processString(String str) {
         String result;
 
-        result = str.replaceAll("\\W_", " ");
+        result = str.replaceAll("[\\W_]", " ");
         result = result.replaceAll("\\s+", " ");
+        result = result.toLowerCase();
 
         return result;
     }
