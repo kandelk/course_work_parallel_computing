@@ -19,7 +19,26 @@ public class ConcurrentIndexBuilder extends Thread{
 
     @Override
     public void run() {
+        List<String> readFile;
+        Path document;
+        int docId;
 
+        while (counter.get() < files.size()) {
+            try {
+                docId = counter.getAndIncrement();
+                document = files.get(docId);
+                readFile = Files.readAllLines(document);
+
+                for (String line : readFile) {
+
+                    line = processString(line);
+                    addStringToMap(line, docId);
+                }
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private String processString(String str) {
