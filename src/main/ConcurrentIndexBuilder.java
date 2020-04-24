@@ -12,8 +12,8 @@ public class ConcurrentIndexBuilder extends Thread{
     private static ConcurrentHashMap<String, List<Integer>> invertedIndex = new ConcurrentHashMap<>(50,50,2);
     private static AtomicInteger counter = new AtomicInteger(0);
 
-    public ConcurrentIndexBuilder(ConcurrentLinkedQueue<Path> filenames) {
-        this.filenames = filenames;
+    public ConcurrentIndexBuilder(ArrayList<Path> files) {
+        this.files = files;
         start();
     }
 
@@ -51,7 +51,22 @@ public class ConcurrentIndexBuilder extends Thread{
         return result;
     }
 
-    public static Map<String, ArrayList<String>> getIndex() {
-        return index;
+    private void addStringToMap(String str, int docId) {
+        List<Integer> list;
+        String[] words = str.split(" ");
+
+        for (String word : words) {
+
+            list = invertedIndex.computeIfAbsent(word, k -> Collections.synchronizedList(new ArrayList<>()));
+
+            if (!list.contains(docId)) {
+
+                list.add(docId);
+            }
+        }
+    }
+    
+    public static ConcurrentHashMap<String, List<Integer>> getInvertedIndex() {
+        return invertedIndex;
     }
 }
