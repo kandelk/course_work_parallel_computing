@@ -20,6 +20,15 @@ public class ConcurrentIndexBuilder extends Thread{
 
     }
 
+    public String processString(String str) {
+        String result;
+
+        result = str.replaceAll("\\W_", " ");
+        result = result.replaceAll("\\s+", " ");
+
+        return result;
+    }
+
     public static Map<String, ArrayList<String>> getIndex() {
         return index;
     }
