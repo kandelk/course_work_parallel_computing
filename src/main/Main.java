@@ -11,28 +11,31 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Main {
-    public static void main(String[] args) {
-        ConcurrentIndexBuilder[] indexBuilders;
+    public static void main(String[] args) throws InterruptedException {
+        ConcurrentIndexBuilder[] threads;
         ArrayList<Path> files = new ArrayList<>();
         int numOfThread;
 
         System.out.print("Enter the number of threads: ");
         numOfThread = new Scanner(System.in).nextInt();
 
-        indexBuilders = new ConcurrentIndexBuilder[numOfThread];
+        threads = new ConcurrentIndexBuilder[numOfThread];
+        ConcurrentIndexBuilder.initIndex(numOfThread);
 
         createListOfFiles(files);
 
-        for (int i = 0; i < numOfThread; ++i) {
-            indexBuilders[i] = new ConcurrentIndexBuilder(files);
-            try {
-                indexBuilders[i].join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+        long startTime = System.currentTimeMillis();
 
-        System.out.println(ConcurrentIndexBuilder.getInvertedIndex());
+        for (int i = 0; i < numOfThread; i++) {
+            threads[i] = new ConcurrentIndexBuilder(files);
+        }
+        for (int i = 0; i < numOfThread; i++) {
+            threads[i].join();
+        }
+        
+        long totalTime = System.currentTimeMillis() - startTime;
+
+        System.out.println(totalTime);
     }
 
     private static void createListOfFiles(Collection<Path> collection) {
