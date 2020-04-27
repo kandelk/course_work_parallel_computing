@@ -43,14 +43,14 @@ public class ConcurrentIndexBuilder extends Thread{
     private String processString(String str) {
         String result;
 
-        result = str.replaceAll("(^[\\W_]+)|([\\W_]+$)", "") //TODO decide whether to stay
+        result = str.replaceAll("(^[\\W_]+)|([\\W_]+$)", "")
                 .replaceAll("[\\W_]", " ")
                 .replaceAll("\\s+", " ");
 
         return result.toLowerCase();
     }
 
-    private void addStringToMap(String str, int docId) {
+    private void addStringToMap(String str, int docId, HashMap<String, List<Integer>> map) {
         List<Integer> list;
         String[] words = str.split(" ");
 
