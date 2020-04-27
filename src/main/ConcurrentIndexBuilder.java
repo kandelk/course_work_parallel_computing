@@ -23,6 +23,8 @@ public class ConcurrentIndexBuilder extends Thread{
         Path document;
         int docId;
 
+        HashMap<String, List<Integer>> map = new HashMap<>();
+
         while (counter.get() < files.size()) {
             try {
                 docId = counter.getAndIncrement();
@@ -32,11 +34,31 @@ public class ConcurrentIndexBuilder extends Thread{
                 for (String line : readFile) {
 
                     line = processString(line);
-                    addStringToMap(line, docId);
+                    addStringToMap(line, docId, map);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+
+        putMapToIndex(map);
+    }
+
+    private void putMapToIndex(HashMap<String, List<Integer>> map) {
+        List<Integer> list;
+
+        for (Map.Entry<String, List<Integer>> entry : map.entrySet()) {
+
+            list = invertedIndex.get(entry.getKey());
+
+            if (list == null) {
+                list = Collections.synchronizedList(new ArrayList<>(entry.getValue()));
+            } else {
+                list.addAll(entry.getValue());
+            }
+
+            list.sort(Integer::compareTo);
+            invertedIndex.put(entry.getKey(), list);
         }
     }
 
@@ -56,7 +78,12 @@ public class ConcurrentIndexBuilder extends Thread{
 
         for (String word : words) {
 
-            list = invertedIndex.computeIfAbsent(word, k -> Collections.synchronizedList(new ArrayList<>()));
+            list = map.get(word);
+
+            if (list == null) {
+                list = new ArrayList<>();
+                map.put(word, list);
+            }
 
             if (!list.contains(docId)) {
 
