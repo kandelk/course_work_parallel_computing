@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class ConcurrentIndexBuilder extends Thread{
     private ArrayList<Path> files;
-    private static ConcurrentHashMap<String, List<Integer>> invertedIndex = new ConcurrentHashMap<>(50,50,2);
+    private static ConcurrentHashMap<String, List<Integer>> invertedIndex;
     private static AtomicInteger counter = new AtomicInteger(0);
 
     public ConcurrentIndexBuilder(ArrayList<Path> files) {
@@ -34,7 +34,6 @@ public class ConcurrentIndexBuilder extends Thread{
                     line = processString(line);
                     addStringToMap(line, docId);
                 }
-
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -44,11 +43,11 @@ public class ConcurrentIndexBuilder extends Thread{
     private String processString(String str) {
         String result;
 
-        result = str.replaceAll("[\\W_]", " ");
-        result = result.replaceAll("\\s+", " ");
-        result = result.toLowerCase();
+        result = str.replaceAll("(^[\\W_]+)|([\\W_]+$)", "") //TODO decide whether to stay
+                .replaceAll("[\\W_]", " ")
+                .replaceAll("\\s+", " ");
 
-        return result;
+        return result.toLowerCase();
     }
 
     private void addStringToMap(String str, int docId) {
@@ -68,5 +67,9 @@ public class ConcurrentIndexBuilder extends Thread{
     
     public static ConcurrentHashMap<String, List<Integer>> getInvertedIndex() {
         return invertedIndex;
+    }
+
+    public static void initIndex(int numOfThreads) {
+            invertedIndex = new ConcurrentHashMap<>(50,50, numOfThreads);
     }
 }
