@@ -25,9 +25,8 @@ public class ConcurrentIndexBuilder extends Thread{
 
         HashMap<String, List<Integer>> localIndex = new HashMap<>();
 
-        while (currDoc.get() < fileList.size()) {
+        while ((docId = currDoc.getAndIncrement()) < fileList.size()) {
             try {
-                docId = currDoc.getAndIncrement();
                 document = fileList.get(docId);
                 readFile = Files.readAllLines(document);
 
@@ -57,8 +56,8 @@ public class ConcurrentIndexBuilder extends Thread{
                 documentList.addAll(entry.getValue());
             }
 
-            documentList.sort(Integer::compareTo);
             invertedIndex.put(entry.getKey(), documentList);
+            documentList.sort(Integer::compareTo);
         }
     }
 
