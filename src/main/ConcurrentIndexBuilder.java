@@ -8,12 +8,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ConcurrentIndexBuilder extends Thread{
-    private ArrayList<Path> files;
+    private ArrayList<Path> fileList;
     private static ConcurrentHashMap<String, List<Integer>> invertedIndex;
-    private static AtomicInteger counter = new AtomicInteger(0);
+    private static AtomicInteger currDoc = new AtomicInteger(0);
 
-    public ConcurrentIndexBuilder(ArrayList<Path> files) {
-        this.files = files;
+    ConcurrentIndexBuilder(ArrayList<Path> fileList) {
+        this.fileList = fileList;
         start();
     }
 
@@ -23,42 +23,42 @@ public class ConcurrentIndexBuilder extends Thread{
         Path document;
         int docId;
 
-        HashMap<String, List<Integer>> map = new HashMap<>();
+        HashMap<String, List<Integer>> localIndex = new HashMap<>();
 
-        while (counter.get() < files.size()) {
+        while (currDoc.get() < fileList.size()) {
             try {
-                docId = counter.getAndIncrement();
-                document = files.get(docId);
+                docId = currDoc.getAndIncrement();
+                document = fileList.get(docId);
                 readFile = Files.readAllLines(document);
 
                 for (String line : readFile) {
 
                     line = processString(line);
-                    addStringToMap(line, docId, map);
+                    addStringToLocalIndex(line, docId, localIndex);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
 
-        putMapToIndex(map);
+        putLocalIndexToIndex(localIndex);
     }
 
-    private void putMapToIndex(HashMap<String, List<Integer>> map) {
-        List<Integer> list;
+    private void putLocalIndexToIndex(HashMap<String, List<Integer>> localIndex) {
+        List<Integer> documentList;
 
-        for (Map.Entry<String, List<Integer>> entry : map.entrySet()) {
+        for (Map.Entry<String, List<Integer>> entry : localIndex.entrySet()) {
 
-            list = invertedIndex.get(entry.getKey());
+            documentList = invertedIndex.get(entry.getKey());
 
-            if (list == null) {
-                list = Collections.synchronizedList(new ArrayList<>(entry.getValue()));
+            if (documentList == null) {
+                documentList = Collections.synchronizedList(new ArrayList<>(entry.getValue()));
             } else {
-                list.addAll(entry.getValue());
+                documentList.addAll(entry.getValue());
             }
 
-            list.sort(Integer::compareTo);
-            invertedIndex.put(entry.getKey(), list);
+            documentList.sort(Integer::compareTo);
+            invertedIndex.put(entry.getKey(), documentList);
         }
     }
 
@@ -72,22 +72,22 @@ public class ConcurrentIndexBuilder extends Thread{
         return result.toLowerCase();
     }
 
-    private void addStringToMap(String str, int docId, HashMap<String, List<Integer>> map) {
-        List<Integer> list;
+    private void addStringToLocalIndex(String str, int docId, HashMap<String, List<Integer>> map) {
+        List<Integer> documentList;
         String[] words = str.split(" ");
 
         for (String word : words) {
 
-            list = map.get(word);
+            documentList = map.get(word);
 
-            if (list == null) {
-                list = new ArrayList<>();
-                map.put(word, list);
+            if (documentList == null) {
+                documentList = new ArrayList<>();
+                map.put(word, documentList);
             }
 
-            if (!list.contains(docId)) {
+            if (!documentList.contains(docId)) {
 
-                list.add(docId);
+                documentList.add(docId);
             }
         }
     }
@@ -96,7 +96,7 @@ public class ConcurrentIndexBuilder extends Thread{
         return invertedIndex;
     }
 
-    public static void initIndex(int numOfThreads) {
+    static void initIndex(int numOfThreads) {
             invertedIndex = new ConcurrentHashMap<>(50,50, numOfThreads);
     }
 }
